@@ -20,7 +20,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,35 +48,25 @@ fun SampleScreen(
     viewModel: SampleViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    
-    // Handle success message - using auto-generated consume function
-    uiState.showSuccessMessage?.let { message ->
-        LaunchedEffect(message) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.consumeShowSuccessMessage()
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    HandleStateEvent(
+        uiState = uiState,
+        viewModel = viewModel,
+        onShowSuccessMessage = { message ->
+            snackBarHostState.showSnackbar(message)
+        },
+        onErrorMessage = { message ->
+            snackBarHostState.showSnackbar("Error: $message")
+        },
+        onNavigateToDetail = { item ->
+            snackBarHostState.showSnackbar("Navigating to detail: $item")
         }
-    }
-    
-    // Handle error message - using auto-generated consume function with custom name
-    uiState.errorMessage?.let { message ->
-        LaunchedEffect(message) {
-            snackbarHostState.showSnackbar("Error: $message")
-            viewModel.clearError()
-        }
-    }
-    
-    // Handle navigation - using auto-generated consume function
-    uiState.navigateToDetail?.let { item ->
-        LaunchedEffect(item) {
-            snackbarHostState.showSnackbar("Navigating to detail: $item")
-            viewModel.consumeNavigateToDetail()
-        }
-    }
-    
+    )
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackBarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -92,18 +81,18 @@ fun SampleScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center
             )
-            
+
             Button(
                 onClick = { viewModel.loadData() },
                 enabled = !uiState.isLoading
             ) {
                 Text("Load Data")
             }
-            
+
             if (uiState.isLoading) {
                 CircularProgressIndicator()
             }
-            
+
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)

@@ -118,10 +118,11 @@ class StateEventProcessor(
                     appendLine("    }")
                 } else {
                     // @UIState 어노테이션이 없는 경우: 기존 방식
-                    logger.error(
-                        "No @UIState annotation found for property $propertyName in class $className",
-                        property
-                    )
+                    appendLine("    // Find MutableStateFlow<$className> field by type")
+                    appendLine("    val uiStateField = this::class.java.declaredFields.find { field ->")
+                    appendLine("        val fieldType = field.type.toString()")
+                    appendLine("        fieldType.contains(\"MutableStateFlow\") && fieldType.contains(\"$className\")")
+                    appendLine("    }")
                 }
 
                 appendLine("    ")
@@ -161,7 +162,96 @@ class StateEventProcessor(
         extensionFile.write(code.toByteArray())
         extensionFile.close()
 
-        logger.warn("StateEventProcessor: Generated extension functions for $className")
+        // Compose helper functions 생성
+        generateComposeHelpers(packageName, className, properties)
+
+        logger.warn("StateEventProcessor: Generated extension functions and Compose helpers for $className")
+    }
+
+    private fun generateComposeHelpers(
+        packageName: String,
+        className: String,
+        properties: List<KSPropertyDeclaration>
+    ) {
+        val composeCode = buildString {
+            appendLine("package $packageName")
+            appendLine()
+            appendLine("import androidx.compose.runtime.Composable")
+            appendLine("import androidx.compose.runtime.LaunchedEffect")
+            appendLine("import androidx.lifecycle.ViewModel")
+            appendLine()
+            
+            // 단일 통합 함수 생성
+            appendLine("/**")
+            appendLine(" * Auto-generated Compose helper for all state events in $className")
+            appendLine(" * Automatically handles all events and calls respective consume functions after actions.")
+            appendLine(" * ")
+            appendLine(" * Usage:")
+            appendLine(" * ```")
+            appendLine(" * HandleStateEvent(")
+            appendLine(" *     uiState = viewModel.uiState.collectAsState().value,")
+            appendLine(" *     viewModel = viewModel,")
+            
+            // 각 property에 대한 사용법 예시 추가
+            properties.forEach { property ->
+                val propertyName = property.simpleName.asString()
+                val propertyType = property.type.resolve().declaration.simpleName.asString()
+                val isNullable = property.type.resolve().isMarkedNullable
+                val baseType = if (isNullable) propertyType.removeSuffix("?") else propertyType
+                
+                appendLine(" *     on${propertyName.replaceFirstChar { it.uppercase() }} = { ${propertyName.lowercase()}: $baseType ->")
+                appendLine(" *         // Your action here (e.g., show snackbar, navigate, etc.)")
+                appendLine(" *     },")
+            }
+            appendLine(" * )")
+            appendLine(" * ```")
+            appendLine(" */")
+            
+            appendLine("@Composable")
+            appendLine("fun HandleStateEvent(")
+            appendLine("    uiState: $className,")
+            appendLine("    viewModel: ViewModel,")
+            
+            // 각 state event에 대한 파라미터 생성 (필수 파라미터로 변경)
+            properties.forEachIndexed { index, property ->
+                val propertyName = property.simpleName.asString()
+                val propertyType = property.type.resolve().declaration.simpleName.asString()
+                val isNullable = property.type.resolve().isMarkedNullable
+                val baseType = if (isNullable) propertyType.removeSuffix("?") else propertyType
+                
+                val comma = if (index == properties.size - 1) "" else ","
+                appendLine("    on${propertyName.replaceFirstChar { it.uppercase() }}: suspend ($baseType) -> Unit$comma")
+            }
+            
+            appendLine(") {")
+            
+            // 각 state event에 대한 LaunchedEffect 생성
+            properties.forEach { property ->
+                val propertyName = property.simpleName.asString()
+                val functionName = getFunctionName(property)
+                val parameterName = "on${propertyName.replaceFirstChar { it.uppercase() }}"
+                
+                appendLine("    // Handle $propertyName state event")
+                appendLine("    uiState.$propertyName?.let { value ->")
+                appendLine("        LaunchedEffect(value) {")
+                appendLine("            $parameterName(value)")
+                appendLine("            viewModel.$functionName()")
+                appendLine("        }")
+                appendLine("    }")
+                appendLine()
+            }
+            
+            appendLine("}")
+        }
+        
+        val composeFile = codeGenerator.createNewFile(
+            dependencies = Dependencies(false, *properties.mapNotNull { it.containingFile }.toTypedArray()),
+            packageName = packageName,
+            fileName = "${className}ComposeHelpers"
+        )
+        
+        composeFile.write(composeCode.toByteArray())
+        composeFile.close()
     }
 
     private fun getFunctionName(property: KSPropertyDeclaration): String {
