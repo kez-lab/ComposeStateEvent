@@ -334,3 +334,4 @@ val navigationEvent: NavEvent? = null
 3. ViewModel에 `MutableStateFlow<YourUiState>` 필드가 있는지 확인
 
 ## 📄 라이센스
+https://github.com/kez-lab/StateEventSample/blob/main/LICENSE
