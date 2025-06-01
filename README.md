@@ -1,12 +1,18 @@
 # StateEvent - Android Compose 상태 이벤트 자동화 라이브러리
 
-StateEvent는 KSP(Kotlin Symbol Processing)를 활용하여 Android Jetpack Compose에서 상태 이벤트 처리를 자동화하는 라이브러리입니다. ViewModel의 일회성 이벤트(one-time events)를 UI에서 소비하는 반복적인 보일러플레이트 코드를 대폭 줄여줍니다.
+StateEvent는 단일 이벤트를 상태로 관리하는 안드로이드 공식문서의 이벤트 관리 기법에 의거하여 KSP(Kotlin Symbol Processing)를 활용한 상태 이벤트 처리 자동화 라이브러리입니다.
+ViewModel의 일회성 이벤트(one-time events)를 소비하는 함수를 만들고 UI에서 액션을 진행한 후 소비하는 반복적인 보일러플레이트 코드를 대폭 줄여줍니다.
+
+### 참조 문서: 
+- https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events
+- https://medium.com/androiddevelopers/viewmodel-one-off-event-antipatterns-16a1da869b95
+
 
 ## 🎯 목적
 
-- **보일러플레이트 제거**: LaunchedEffect와 상태 소비 함수의 반복적인 코드 자동 생성
+- **보일러플레이트 제거**: ViewModel 내부에서 State를 null로 해제하는 로직과 UI에서 LaunchedEffect와 상태 소비 함수의 반복적인 코드를 자동 생성
+- **이벤트 소비 자동화**: HandleStateEvent 를 활용하여 trigger 된 이벤트를 consume 된 상태로 되돌리는 로직을 자동화하여 보일러 플레이트 코드를 제거
 - **타입 안전성**: 컴파일 타임에 안전한 코드 생성으로 런타임 오류 방지
-- **발견성 개선**: 단일 통합 함수로 모든 state event 처리를 한 곳에서 관리
 - **UDF 패턴 지원**: Unidirectional Data Flow 패턴을 유지하며 side effect 처리
 
 ## 🚀 주요 기능
