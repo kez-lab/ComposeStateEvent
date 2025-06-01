@@ -22,7 +22,7 @@ class SampleViewModel : ViewModel() {
                 // Simulate network call
                 delay(2000)
                 val data = listOf("Item 1", "Item 2", "Item 3")
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isLoading = false,
                         data = data,
@@ -30,7 +30,7 @@ class SampleViewModel : ViewModel() {
                     ) 
                 }
             } catch (e: Exception) {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isLoading = false,
                         errorMessage = "Failed to load data: ${e.message}"
@@ -41,26 +41,8 @@ class SampleViewModel : ViewModel() {
     }
     
     fun onItemClick(item: String) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(navigateToDetail = item)
         }
-    }
-    
-    // Generated consume functions are available as extension functions:
-    // - consumeShowSuccessMessage(_uiState)
-    // - clearError(_uiState) 
-    // - consumeNavigateToDetail(_uiState)
-    
-    // Example usage methods:
-    fun onSuccessMessageShown() {
-        consumeShowSuccessMessage(_uiState)
-    }
-    
-    fun onErrorShown() {
-        clearError(_uiState)
-    }
-    
-    fun onNavigatedToDetail() {
-        consumeNavigateToDetail(_uiState)
     }
 }

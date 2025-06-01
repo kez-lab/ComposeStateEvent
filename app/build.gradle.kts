@@ -54,8 +54,11 @@ dependencies {
     implementation(libs.androidx.material3)
     
     // ViewModel and StateFlow
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.0")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    
+    // Kotlin reflection for state-event library
+    implementation(libs.kotlin.reflect)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

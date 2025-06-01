@@ -51,27 +51,27 @@ fun SampleScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // Handle success message
+    // Handle success message - using auto-generated consume function
     uiState.showSuccessMessage?.let { message ->
         LaunchedEffect(message) {
             snackbarHostState.showSnackbar(message)
-            viewModel.onSuccessMessageShown()
+            viewModel.consumeShowSuccessMessage()
         }
     }
     
-    // Handle error message
+    // Handle error message - using auto-generated consume function with custom name
     uiState.errorMessage?.let { message ->
         LaunchedEffect(message) {
             snackbarHostState.showSnackbar("Error: $message")
-            viewModel.onErrorShown()
+            viewModel.clearError()
         }
     }
     
-    // Handle navigation
+    // Handle navigation - using auto-generated consume function
     uiState.navigateToDetail?.let { item ->
         LaunchedEffect(item) {
             snackbarHostState.showSnackbar("Navigating to detail: $item")
-            viewModel.onNavigatedToDetail()
+            viewModel.consumeNavigateToDetail()
         }
     }
     
