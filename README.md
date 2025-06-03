@@ -271,7 +271,6 @@ annotation class UIState
 
 ### Before (수동 구현)
 ```kotlin
-// 각 state event마다 15줄의 반복 코드
 uiState.showSuccessMessage?.let { message ->
     LaunchedEffect(message) {
         snackbarHostState.showSnackbar(message)
@@ -296,7 +295,6 @@ uiState.navigateToDetail?.let { item ->
 
 ### After (자동 생성)
 ```kotlin
-// 단 8줄로 모든 state event 처리
 HandleStateEvent(
     uiState = uiState,
     viewModel = viewModel,
