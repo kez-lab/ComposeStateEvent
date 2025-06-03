@@ -95,7 +95,7 @@ fun SampleDetailScreen(
         uiState = uiState,
         stateEventHandler = viewModel,
         onShowToast = { message: String ->
-            Toast.makeText(context, message as CharSequence, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         },
         onNavigateBack = { _: Boolean ->
             onNavigateBack()
