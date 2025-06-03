@@ -1,5 +1,6 @@
 package io.github.kez.state.event.sample.screen.detail
 
+import io.github.kez.state.event.annotations.EventType
 import io.github.kez.state.event.annotations.StateEvent
 import io.github.kez.state.event.annotations.UIState
 
@@ -14,7 +15,7 @@ data class SampleDetailUiState(
     @StateEvent
     val showToast: String? = null,
 
-    @StateEvent
+    @StateEvent(eventType = EventType.NAVIGATION)
     val navigateBack: Boolean? = null,
 
     @StateEvent

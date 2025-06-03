@@ -94,13 +94,13 @@ fun SampleDetailScreen(
     HandleStateEvent(
         uiState = uiState,
         stateEventHandler = viewModel,
-        onShowToast = { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        onShowToast = { message: String ->
+            Toast.makeText(context, message as CharSequence, Toast.LENGTH_SHORT).show()
         },
-        onNavigateBack = {
+        onNavigateBack = { _: Boolean ->
             onNavigateBack()
         },
-        onShareContent = { content ->
+        onShareContent = { content: String ->
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, content as String)

@@ -182,12 +182,22 @@ class StateEventProcessor(
                 val propertyName = property.simpleName.asString()
                 val functionName = getFunctionName(property)
                 val parameterName = "on${propertyName.replaceFirstChar { it.uppercase() }}"
+                val eventType = getEventType(property)
                 
-                appendLine("    // Handle $propertyName state event")
+                appendLine("    // Handle $propertyName state event (${eventType})")
                 appendLine("    uiState.$propertyName?.let { value ->")
                 appendLine("        LaunchedEffect(value) {")
-                appendLine("            $parameterName(value)")
-                appendLine("            stateEventHandler.$functionName()")
+                
+                if (eventType == "NAVIGATION") {
+                    // NAVIGATION: consume first, then action
+                    appendLine("            stateEventHandler.$functionName()")
+                    appendLine("            $parameterName(value)")
+                } else {
+                    // STANDARD: action first, then consume
+                    appendLine("            $parameterName(value)")
+                    appendLine("            stateEventHandler.$functionName()")
+                }
+                
                 appendLine("        }")
                 appendLine("    }")
                 appendLine()
@@ -222,6 +232,60 @@ class StateEventProcessor(
             "consume${propertyName.replaceFirstChar { it.uppercase() }}"
         } else {
             customFunctionName
+        }
+    }
+    
+    private fun getEventType(property: KSPropertyDeclaration): String {
+        try {
+            // @StateEvent 어노테이션에서 eventType 가져오기
+            val annotation = property.annotations.first {
+                it.annotationType.resolve().declaration.qualifiedName?.asString() == StateEvent::class.qualifiedName
+            }
+
+
+            // KSP에서 enum 값을 읽는 더 정확한 방법 - 소스 코드 분석 기반
+            val eventTypeArgument = annotation.arguments.find { it.name?.asString() == "eventType" }
+            
+            if (eventTypeArgument == null) {
+                return "STANDARD"
+            }
+            
+            val value = eventTypeArgument.value
+            
+            // 여전히 null이면 디폴트 사용
+            if (value == null) {
+                return "STANDARD"
+            }
+            
+            // KSP에서 enum은 KSClassDeclaration으로 처리됨
+            val eventType = when (value) {
+                is com.google.devtools.ksp.symbol.KSClassDeclaration -> {
+                    value.simpleName.asString()
+                }
+                is com.google.devtools.ksp.symbol.KSType -> {
+                    value.declaration.simpleName.asString()
+                }
+                else -> {
+                    // 문자열로 변환 후 enum 이름 추출
+                    val stringValue = value.toString()
+                    
+                    // EventType.NAVIGATION -> NAVIGATION 추출
+                    if (stringValue.contains("EventType.")) {
+                        stringValue.substringAfterLast(".")
+                    } else if (stringValue.contains("NAVIGATION") || stringValue.contains("STANDARD")) {
+                        if (stringValue.contains("NAVIGATION")) "NAVIGATION" else "STANDARD"
+                    } else {
+                        "STANDARD" // 기본값
+                    }
+                }
+            }
+            
+            return eventType
+            
+        } catch (e: Exception) {
+            logger.error("Property ${property.simpleName.asString()}: Error reading eventType: ${e.message}")
+            e.printStackTrace()
+            return "STANDARD" // 에러 시 기본값
         }
     }
 }
