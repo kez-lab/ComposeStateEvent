@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.kez.state.event.sample.screen.detail.SampleDetailActivity
 import io.github.kez.state.event.sample.ui.theme.StateEventSampleTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,10 +50,11 @@ fun SampleScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     HandleStateEvent(
         uiState = uiState,
-        viewModel = viewModel,
+        stateEventHandler = viewModel,
         onShowSuccessMessage = { message ->
             snackBarHostState.showSnackbar(message)
         },
@@ -60,7 +62,8 @@ fun SampleScreen(
             snackBarHostState.showSnackbar("Error: $message")
         },
         onNavigateToDetail = { item ->
-            snackBarHostState.showSnackbar("Navigating to detail: $item")
+            // 🚀 Navigate to DetailActivity using our library!
+            context.startActivity(SampleDetailActivity.newIntent(context, item))
         }
     )
 

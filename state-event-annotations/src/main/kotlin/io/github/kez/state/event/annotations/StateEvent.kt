@@ -7,8 +7,6 @@ package io.github.kez.state.event.annotations
  *
  * @param consumeFunctionName Optional custom name for the generated consume function.
  *                           If not provided, it will be generated based on the property name.
- * @param handlerFunctionName Optional custom name for the generated Compose handler function.
- *                           If not provided, it will be generated based on the property name.
  *
  * Usage example:
  * ```
@@ -43,5 +41,4 @@ package io.github.kez.state.event.annotations
 @Retention(AnnotationRetention.SOURCE)
 annotation class StateEvent(
     val consumeFunctionName: String = "",
-    val handlerFunctionName: String = ""
 )

@@ -77,20 +77,12 @@ class StateEventProcessor(
         val packageName = uiStateClass.packageName.asString()
         val className = uiStateClass.simpleName.asString()
 
-        // Check if UIState class has @UIState annotation
-        val hasUIStateAnnotation = uiStateClass.annotations.any { annotation ->
-            annotation.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.kez.state.event.annotations.UIState"
-        }
-
-        logger.warn("StateEventProcessor: Generating extensions for $className with ${properties.size} properties (hasUIStateAnnotation: $hasUIStateAnnotation)")
+        logger.warn("StateEventProcessor: Generating safe extensions for $className with ${properties.size} properties")
 
         val code = buildString {
             appendLine("package $packageName")
             appendLine()
-            appendLine("import androidx.lifecycle.ViewModel")
-            appendLine("import kotlinx.coroutines.flow.MutableStateFlow")
-            appendLine("import kotlinx.coroutines.flow.update")
-            appendLine("import kotlin.reflect.KMutableProperty1")
+            appendLine("import io.github.kez.state.event.annotations.StateEventHandler")
             appendLine()
 
             properties.forEach { property ->
@@ -99,51 +91,11 @@ class StateEventProcessor(
 
                 appendLine("/**")
                 appendLine(" * Auto-generated consume function for state event: $propertyName")
-                appendLine(" * Usage: this.$functionName() in your ViewModel")
+                appendLine(" * This function is type-safe and obfuscation-proof.")
+                appendLine(" * Usage: this.$functionName() in your StateEventHandler<$className> implementing ViewModel")
                 appendLine(" */")
-                appendLine("fun ViewModel.$functionName() {")
-
-                if (hasUIStateAnnotation) {
-                    // @UIState 어노테이션이 있는 경우: 어노테이션 기반으로 찾기
-                    appendLine("    // Find MutableStateFlow field with @UIState annotated type")
-                    appendLine("    val uiStateField = this::class.java.declaredFields.find { field ->")
-                    appendLine("        val fieldType = field.type.toString()")
-                    appendLine("        fieldType.contains(\"MutableStateFlow\") && ")
-                    appendLine("        try {")
-                    appendLine("            val genericType = field.genericType.toString()")
-                    appendLine("            genericType.contains(\"$className\")")
-                    appendLine("        } catch (e: Exception) {")
-                    appendLine("            fieldType.contains(\"$className\")")
-                    appendLine("        }")
-                    appendLine("    }")
-                } else {
-                    // @UIState 어노테이션이 없는 경우: 기존 방식
-                    appendLine("    // Find MutableStateFlow<$className> field by type")
-                    appendLine("    val uiStateField = this::class.java.declaredFields.find { field ->")
-                    appendLine("        val fieldType = field.type.toString()")
-                    appendLine("        fieldType.contains(\"MutableStateFlow\") && fieldType.contains(\"$className\")")
-                    appendLine("    }")
-                }
-
-                appendLine("    ")
-                appendLine("    if (uiStateField != null) {")
-                appendLine("        uiStateField.isAccessible = true")
-                appendLine("        @Suppress(\"UNCHECKED_CAST\")")
-                appendLine("        val uiState = uiStateField.get(this) as? MutableStateFlow<$className>")
-                appendLine("        uiState?.update { it.copy($propertyName = null) }")
-                appendLine("            ?: throw IllegalStateException(\"Found MutableStateFlow field but failed to cast to MutableStateFlow<$className>\")")
-                appendLine("    } else {")
-                appendLine("        // Fallback: try Kotlin reflection for properties")
-                appendLine("        try {")
-                appendLine("            val prop = this::class.members.find { member ->")
-                appendLine("                member.returnType.toString().contains(\"MutableStateFlow<$className>\")")
-                appendLine("            } as? kotlin.reflect.KMutableProperty1<ViewModel, MutableStateFlow<$className>>")
-                appendLine("            prop?.get(this)?.update { it.copy($propertyName = null) }")
-                appendLine("                ?: throw IllegalStateException(\"No MutableStateFlow<$className> property found in ViewModel${if (hasUIStateAnnotation) " (with @UIState annotation)" else ""}\")")
-                appendLine("        } catch (e: Exception) {")
-                appendLine("            throw IllegalStateException(\"Failed to find MutableStateFlow<$className> property. Make sure your ViewModel has a MutableStateFlow<$className> property${if (hasUIStateAnnotation) " (with @UIState annotation)" else ""}\", e)")
-                appendLine("        }")
-                appendLine("    }")
+                appendLine("fun StateEventHandler<$className>.$functionName() {")
+                appendLine("    updateUiState { copy($propertyName = null) }")
                 appendLine("}")
                 appendLine()
             }
@@ -178,7 +130,7 @@ class StateEventProcessor(
             appendLine()
             appendLine("import androidx.compose.runtime.Composable")
             appendLine("import androidx.compose.runtime.LaunchedEffect")
-            appendLine("import androidx.lifecycle.ViewModel")
+            appendLine("import io.github.kez.state.event.annotations.StateEventHandler")
             appendLine()
             
             // 단일 통합 함수 생성
@@ -190,7 +142,7 @@ class StateEventProcessor(
             appendLine(" * ```")
             appendLine(" * HandleStateEvent(")
             appendLine(" *     uiState = viewModel.uiState.collectAsState().value,")
-            appendLine(" *     viewModel = viewModel,")
+            appendLine(" *     stateEventHandler = viewModel,")
             
             // 각 property에 대한 사용법 예시 추가
             properties.forEach { property ->
@@ -210,7 +162,7 @@ class StateEventProcessor(
             appendLine("@Composable")
             appendLine("fun HandleStateEvent(")
             appendLine("    uiState: $className,")
-            appendLine("    viewModel: ViewModel,")
+            appendLine("    stateEventHandler: StateEventHandler<$className>,")
             
             // 각 state event에 대한 파라미터 생성 (필수 파라미터로 변경)
             properties.forEachIndexed { index, property ->
@@ -235,7 +187,7 @@ class StateEventProcessor(
                 appendLine("    uiState.$propertyName?.let { value ->")
                 appendLine("        LaunchedEffect(value) {")
                 appendLine("            $parameterName(value)")
-                appendLine("            viewModel.$functionName()")
+                appendLine("            stateEventHandler.$functionName()")
                 appendLine("        }")
                 appendLine("    }")
                 appendLine()

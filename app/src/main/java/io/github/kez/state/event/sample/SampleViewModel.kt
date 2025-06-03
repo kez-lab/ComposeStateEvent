@@ -2,6 +2,7 @@ package io.github.kez.state.event.sample
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.kez.state.event.annotations.StateEventHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,40 +10,45 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SampleViewModel : ViewModel() {
-    
+class SampleViewModel : ViewModel(), StateEventHandler<SampleUiState> {
+
     private val _uiState = MutableStateFlow(SampleUiState())
     val uiState: StateFlow<SampleUiState> = _uiState.asStateFlow()
-    
+
+    override fun updateUiState(transform: SampleUiState.() -> SampleUiState) {
+        _uiState.update(transform)
+    }
+
     fun loadData() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            
+            updateUiState {
+                copy(isLoading = true)
+            }
+
             try {
-                // Simulate network call
                 delay(2000)
                 val data = listOf("Item 1", "Item 2", "Item 3")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
+                updateUiState {
+                    copy(
                         data = data,
+                        isLoading = false,
                         showSuccessMessage = "Data loaded successfully!"
-                    ) 
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
+                updateUiState {
+                    copy(
                         isLoading = false,
                         errorMessage = "Failed to load data: ${e.message}"
-                    ) 
+                    )
                 }
             }
         }
     }
-    
+
     fun onItemClick(item: String) {
-        _uiState.update {
-            it.copy(navigateToDetail = item)
+        updateUiState {
+            copy(navigateToDetail = item)
         }
     }
 }

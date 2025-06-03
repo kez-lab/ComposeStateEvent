@@ -23,6 +23,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <activity
+            android:name="io.github.kez.state.event.sample.screen.detail.SampleDetailActivity"
+            android:exported="false"
+            android:label="Detail"
+            android:theme="@style/Theme.StateEventSample" />
     </application>
 
 </manifest>
