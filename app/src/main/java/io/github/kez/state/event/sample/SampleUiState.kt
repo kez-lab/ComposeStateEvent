@@ -1,5 +1,6 @@
 package io.github.kez.state.event.sample
 
+import io.github.kez.state.event.annotations.EventType
 import io.github.kez.state.event.annotations.StateEvent
 import io.github.kez.state.event.annotations.UIState
 
@@ -11,9 +12,9 @@ data class SampleUiState(
     @StateEvent
     val showSuccessMessage: String? = null,
 
-    @StateEvent(consumeFunctionName = "clearError")
+    @StateEvent
     val errorMessage: String? = null,
 
-    @StateEvent
+    @StateEvent(eventType = EventType.NAVIGATION)
     val navigateToDetail: String? = null
 )
