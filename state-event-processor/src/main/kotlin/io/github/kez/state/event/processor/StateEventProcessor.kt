@@ -44,7 +44,6 @@ class StateEventProcessor(
                 generateStateEventExtensions(containingClass, properties)
             } catch (e: Exception) {
                 logger.error("StateEventProcessor: Error processing class ${containingClass.simpleName.asString()}: ${e.message}")
-                e.printStackTrace()
             }
         }
 
@@ -305,7 +304,6 @@ class StateEventProcessor(
 
         } catch (e: Exception) {
             logger.error("Property ${property.simpleName.asString()}: Error reading eventType: ${e.message}")
-            e.printStackTrace()
             return EventType.STANDARD // 에러 시 기본값
         }
     }
