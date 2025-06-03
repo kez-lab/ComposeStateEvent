@@ -137,7 +137,7 @@ class StateEventProcessor(
             // 단일 통합 함수 생성
             appendLine("/**")
             appendLine(" * Auto-generated Compose helper for all state events in $className")
-            appendLine(" * Automatically handles all events and calls respective consume functions after actions.")
+            appendLine(" * Automatically handles all events with appropriate consumption order based on event type.")
             appendLine(" * ")
             appendLine(" * Usage:")
             appendLine(" * ```")

@@ -103,7 +103,7 @@ fun SampleDetailScreen(
         onShareContent = { content: String ->
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, content as String)
+                putExtra(Intent.EXTRA_TEXT, content)
             }
             context.startActivity(Intent.createChooser(shareIntent, "Share via"))
         }
